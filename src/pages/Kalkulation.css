@@ -155,7 +155,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 54px;
+  height: 60px;
   padding: 0;
   box-sizing: border-box;
 }
@@ -174,7 +174,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 54px;
+  height: 60px;
   padding: 0 20px;
   border-top: 1px solid #e2e8f0;
   background: #f8fafc;
@@ -199,7 +199,7 @@
   justify-content: center;
   gap: 6px;
   width: 100%;
-  min-height: 54px;
+  height: 60px;
   padding: 0 20px;
   background: #f0fdfa;
   border: none;

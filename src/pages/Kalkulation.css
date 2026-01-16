@@ -138,7 +138,7 @@
 
 .bottom-container {
   position: fixed;
-  bottom: calc(60px + max(8px, env(safe-area-inset-bottom)));
+  bottom: calc(60px + env(safe-area-inset-bottom));
   left: 0;
   right: 0;
   background: #ffffff;
@@ -174,7 +174,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 60px;
+  height: 40px;
   padding: 0 20px;
   border-top: 1px solid #e2e8f0;
   background: #f8fafc;

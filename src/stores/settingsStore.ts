@@ -20,7 +20,7 @@ export const useSettingsStore = create<SettingsState>()(
       mwst: 19,
       stundenlohn: 60,
       schnittpreis: 60,
-      einkaufspreisFormel: '{preis} * {anzahl}',
+      einkaufspreisFormel: '{preis} * {anzahl} * (1 + {mwst}/100)',
       aufwandsentschaedigungFormel: '{zeitaufwand} * {stundenlohn}',
 
       setMwst: (value) => set({ mwst: value }),

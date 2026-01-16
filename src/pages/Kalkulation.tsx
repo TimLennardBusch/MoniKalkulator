@@ -59,7 +59,7 @@ export default function Kalkulation() {
 
     // Only calculate product price for "Einsetzen"
     const einkaufspreisBrutto = showProductSelection
-      ? parseFormula(einkaufspreisFormel, { preis, anzahl: anzahlNum, zeitaufwand: zeitaufwandNum, stundenlohn, schnittpreis })
+      ? parseFormula(einkaufspreisFormel, { preis, anzahl: anzahlNum, zeitaufwand: zeitaufwandNum, stundenlohn, schnittpreis, mwst })
       : 0;
 
     // Calculate aufwandsentschädigung for all treatment types

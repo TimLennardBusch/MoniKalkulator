@@ -4,15 +4,18 @@ import { useSettingsStore, parseFormula } from '../stores/settingsStore';
 import SearchableDropdown from '../components/SearchableDropdown';
 import './Kalkulation.css';
 
-type SelectionKeys = 'behandlung' | 'produkt' | 'typ' | 'laenge';
+type SelectionKeys = 'produkt' | 'typ' | 'laenge';
+
+// Fixed Behandlung options
+const BEHANDLUNG_OPTIONS = ['Einsetzen', 'Hochsetzen', 'Rausnehmen'];
 
 export default function Kalkulation() {
   const { products, getFilteredOptions } = useProductStore();
   const { mwst, stundenlohn, schnittpreis, einkaufspreisFormel, aufwandsentschaedigungFormel } =
     useSettingsStore();
 
+  const [behandlung, setBehandlung] = useState('');
   const [selection, setSelection] = useState<Record<SelectionKeys, string>>({
-    behandlung: '',
     produkt: '',
     typ: '',
     laenge: '',
@@ -20,55 +23,62 @@ export default function Kalkulation() {
 
   const [anzahl, setAnzahl] = useState('1');
   const [zeitaufwand, setZeitaufwand] = useState('');
+  const [schneiden, setSchneiden] = useState(false);
 
-  const behandlungOptions = useMemo(
-    () => getFilteredOptions('behandlung', selection),
-    [products, selection]
-  );
+  // Determine if we should show product selection (only for "Einsetzen")
+  const showProductSelection = behandlung === 'Einsetzen';
+
   const produktOptions = useMemo(
-    () => getFilteredOptions('produkt', selection),
+    () => getFilteredOptions('produkt', { behandlung: 'Einsetzen', ...selection }),
     [products, selection]
   );
   const typOptions = useMemo(
-    () => getFilteredOptions('typ', selection),
+    () => getFilteredOptions('typ', { behandlung: 'Einsetzen', ...selection }),
     [products, selection]
   );
   const laengeOptions = useMemo(
-    () => getFilteredOptions('laenge', selection),
+    () => getFilteredOptions('laenge', { behandlung: 'Einsetzen', ...selection }),
     [products, selection]
   );
 
   const selectedProduct = useMemo(() => {
-    if (!selection.behandlung || !selection.produkt) return null;
+    if (!showProductSelection || !selection.produkt) return null;
     return products.find((p) => {
-      const matches = p.behandlung === selection.behandlung && p.produkt === selection.produkt;
+      const matches = p.behandlung === 'Einsetzen' && p.produkt === selection.produkt;
       if (!matches) return false;
       if (selection.typ && p.typ !== selection.typ) return false;
       if (selection.laenge && p.laenge !== selection.laenge) return false;
       return true;
     });
-  }, [products, selection]);
+  }, [products, selection, showProductSelection]);
 
   const calculations = useMemo(() => {
     const anzahlNum = parseFloat(anzahl) || 0;
     const zeitaufwandNum = parseFloat(zeitaufwand) || 0;
     const preis = selectedProduct?.preis || 0;
 
-    const variables = {
-      preis,
+    // Only calculate product price for "Einsetzen"
+    const einkaufspreisBrutto = showProductSelection
+      ? parseFormula(einkaufspreisFormel, { preis, anzahl: anzahlNum, zeitaufwand: zeitaufwandNum, stundenlohn, schnittpreis })
+      : 0;
+
+    // Calculate aufwandsentschädigung for all treatment types
+    const aufwandsentschaedigung = parseFormula(aufwandsentschaedigungFormel, {
+      preis: 0,
       anzahl: anzahlNum,
       zeitaufwand: zeitaufwandNum,
       stundenlohn,
       schnittpreis,
-    };
+    });
 
-    const einkaufspreisBrutto = parseFormula(einkaufspreisFormel, variables);
-    const aufwandsentschaedigung = parseFormula(aufwandsentschaedigungFormel, variables);
+    // Add Schnittpreis if schneiden is enabled
+    const schnittpreisTotal = schneiden ? schnittpreis : 0;
+
     const mwstBetrag = einkaufspreisBrutto * (mwst / 100);
-    const gesamtpreis = einkaufspreisBrutto + aufwandsentschaedigung;
+    const gesamtpreis = einkaufspreisBrutto + aufwandsentschaedigung + schnittpreisTotal;
 
-    return { einkaufspreisBrutto, mwstBetrag, aufwandsentschaedigung, gesamtpreis };
-  }, [selectedProduct, anzahl, zeitaufwand, mwst, stundenlohn, schnittpreis, einkaufspreisFormel, aufwandsentschaedigungFormel]);
+    return { einkaufspreisBrutto, mwstBetrag, aufwandsentschaedigung, schnittpreisTotal, gesamtpreis };
+  }, [selectedProduct, anzahl, zeitaufwand, mwst, stundenlohn, schnittpreis, einkaufspreisFormel, aufwandsentschaedigungFormel, showProductSelection, schneiden]);
 
   const handleSelect = (field: SelectionKeys, value: string) => {
     setSelection((prev) => ({ ...prev, [field]: value }));
@@ -78,154 +88,241 @@ export default function Kalkulation() {
     setSelection((prev) => ({ ...prev, [field]: '' }));
   };
 
+  const handleBehandlungChange = (value: string) => {
+    setBehandlung(value);
+    // Reset product selection when changing treatment type
+    if (value !== 'Einsetzen') {
+      setSelection({ produkt: '', typ: '', laenge: '' });
+      setAnzahl('1');
+    }
+  };
+
   const handleReset = () => {
-    setSelection({ behandlung: '', produkt: '', typ: '', laenge: '' });
+    setBehandlung('');
+    setSelection({ produkt: '', typ: '', laenge: '' });
     setAnzahl('1');
     setZeitaufwand('');
+    setSchneiden(false);
   };
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
   };
 
-  const hasSelection = selection.behandlung || selection.produkt || selection.typ || selection.laenge;
+  const hasSelection = behandlung || selection.produkt || selection.typ || selection.laenge;
+
+  // Dynamic section title
+  const kalkulationTitle = behandlung ? `Kalkulation: ${behandlung}` : 'Kalkulation';
 
   return (
     <div className="kalkulation-page">
       <div className="kalkulation-scroll">
+        {/* Behandlung Selection (always visible) */}
         <section className="section">
-          <h2 className="section-title">Produktauswahl</h2>
-
+          <h2 className="section-title">Behandlung</h2>
           <SearchableDropdown
             label="Behandlung"
-            value={selection.behandlung}
+            value={behandlung}
             placeholder="Behandlung auswählen"
-            availableOptions={behandlungOptions.available}
-            unavailableOptions={behandlungOptions.unavailable}
-            onSelect={(v) => handleSelect('behandlung', v)}
-            onClear={() => handleClear('behandlung')}
-          />
-
-          <SearchableDropdown
-            label="Produkt"
-            value={selection.produkt}
-            placeholder="Produkt auswählen"
-            availableOptions={produktOptions.available}
-            unavailableOptions={produktOptions.unavailable}
-            onSelect={(v) => handleSelect('produkt', v)}
-            onClear={() => handleClear('produkt')}
-          />
-
-          <SearchableDropdown
-            label="Typ"
-            value={selection.typ}
-            placeholder="Typ auswählen"
-            availableOptions={typOptions.available}
-            unavailableOptions={typOptions.unavailable}
-            onSelect={(v) => handleSelect('typ', v)}
-            onClear={() => handleClear('typ')}
-          />
-
-          <SearchableDropdown
-            label="Länge"
-            value={selection.laenge}
-            placeholder="Länge auswählen"
-            availableOptions={laengeOptions.available}
-            unavailableOptions={laengeOptions.unavailable}
-            onSelect={(v) => handleSelect('laenge', v)}
-            onClear={() => handleClear('laenge')}
+            availableOptions={BEHANDLUNG_OPTIONS}
+            unavailableOptions={[]}
+            onSelect={handleBehandlungChange}
+            onClear={() => setBehandlung('')}
           />
         </section>
 
-        {selectedProduct && (
-          <div className="product-info-card">
-            <div className="product-info-row">
-              <span className="product-info-label">Einkaufspreis (Brutto) pro Stück</span>
-              <span className="product-info-value">{formatCurrency(selectedProduct.preis)}</span>
-            </div>
-            {selectedProduct.artikelId && (
-              <div className="product-info-row">
-                <span className="product-info-label">Artikel-ID</span>
-                <span className="product-info-value-small">{selectedProduct.artikelId}</span>
+        {/* Product Selection (only for "Einsetzen") */}
+        {showProductSelection && (
+          <>
+            <section className="section">
+              <h2 className="section-title">Produktauswahl</h2>
+
+              <SearchableDropdown
+                label="Produkt"
+                value={selection.produkt}
+                placeholder="Produkt auswählen"
+                availableOptions={produktOptions.available}
+                unavailableOptions={produktOptions.unavailable}
+                onSelect={(v) => handleSelect('produkt', v)}
+                onClear={() => handleClear('produkt')}
+              />
+
+              <SearchableDropdown
+                label="Typ"
+                value={selection.typ}
+                placeholder="Typ auswählen"
+                availableOptions={typOptions.available}
+                unavailableOptions={typOptions.unavailable}
+                onSelect={(v) => handleSelect('typ', v)}
+                onClear={() => handleClear('typ')}
+              />
+
+              <SearchableDropdown
+                label="Länge"
+                value={selection.laenge}
+                placeholder="Länge auswählen"
+                availableOptions={laengeOptions.available}
+                unavailableOptions={laengeOptions.unavailable}
+                onSelect={(v) => handleSelect('laenge', v)}
+                onClear={() => handleClear('laenge')}
+              />
+            </section>
+
+            {selectedProduct && (
+              <div className="product-info-card">
+                <div className="product-info-row">
+                  <span className="product-info-label">Einkaufspreis (Brutto) pro Stück</span>
+                  <span className="product-info-value">{formatCurrency(selectedProduct.preis)}</span>
+                </div>
+                {selectedProduct.artikelId && (
+                  <div className="product-info-row">
+                    <span className="product-info-label">Artikel-ID</span>
+                    <span className="product-info-value-small">{selectedProduct.artikelId}</span>
+                  </div>
+                )}
+                {selectedProduct.info && (
+                  <div className="product-info-row">
+                    <span className="product-info-label">Info</span>
+                    <span className="product-info-value-small">{selectedProduct.info}</span>
+                  </div>
+                )}
               </div>
             )}
-            {selectedProduct.info && (
-              <div className="product-info-row">
-                <span className="product-info-label">Info</span>
-                <span className="product-info-value-small">{selectedProduct.info}</span>
+
+            <section className="section">
+              <h2 className="section-title">Mengen & Zeitaufwand</h2>
+
+              <div className="input-group">
+                <label className="label">Benötigte Anzahl</label>
+                <input
+                  type="number"
+                  className="input"
+                  value={anzahl}
+                  onChange={(e) => setAnzahl(e.target.value)}
+                  placeholder="1"
+                />
               </div>
-            )}
-          </div>
+
+              <div className="input-group">
+                <label className="label">Zeitaufwand (Stunden)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  className="input"
+                  value={zeitaufwand}
+                  onChange={(e) => setZeitaufwand(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+
+              <div className="toggle-group">
+                <label className="toggle-label">Schneiden?</label>
+                <button
+                  type="button"
+                  className={`toggle-button ${schneiden ? 'active' : ''}`}
+                  onClick={() => setSchneiden(!schneiden)}
+                >
+                  <span className="toggle-track">
+                    <span className="toggle-thumb"></span>
+                  </span>
+                  <span className="toggle-text">{schneiden ? 'Ja (+60€)' : 'Nein'}</span>
+                </button>
+              </div>
+            </section>
+          </>
         )}
 
-        <section className="section">
-          <h2 className="section-title">Mengen & Zeitaufwand</h2>
+        {/* For Hochsetzen/Rausnehmen: only Zeitaufwand */}
+        {behandlung && !showProductSelection && (
+          <section className="section">
+            <h2 className="section-title">Zeitaufwand</h2>
 
-          <div className="input-group">
-            <label className="label">Benötigte Anzahl</label>
-            <input
-              type="number"
-              className="input"
-              value={anzahl}
-              onChange={(e) => setAnzahl(e.target.value)}
-              placeholder="1"
-            />
-          </div>
+            <div className="input-group">
+              <label className="label">Zeitaufwand (Stunden)</label>
+              <input
+                type="number"
+                step="0.1"
+                className="input"
+                value={zeitaufwand}
+                onChange={(e) => setZeitaufwand(e.target.value)}
+                placeholder="0"
+              />
+            </div>
 
-          <div className="input-group">
-            <label className="label">Zeitaufwand (Stunden)</label>
-            <input
-              type="number"
-              step="0.1"
-              className="input"
-              value={zeitaufwand}
-              onChange={(e) => setZeitaufwand(e.target.value)}
-              placeholder="0"
-            />
-          </div>
-        </section>
+            <div className="toggle-group">
+              <label className="toggle-label">Schneiden?</label>
+              <button
+                type="button"
+                className={`toggle-button ${schneiden ? 'active' : ''}`}
+                onClick={() => setSchneiden(!schneiden)}
+              >
+                <span className="toggle-track">
+                  <span className="toggle-thumb"></span>
+                </span>
+                <span className="toggle-text">{schneiden ? 'Ja (+60€)' : 'Nein'}</span>
+              </button>
+            </div>
+          </section>
+        )}
 
-        <section className="section">
-          <h2 className="section-title">Kalkulation</h2>
+        {/* Kalkulation section (always visible when Behandlung is selected) */}
+        {behandlung && (
+          <section className="section">
+            <h2 className="section-title">{kalkulationTitle}</h2>
 
-          <div className="calculation-card">
-            <div className="calc-row">
-              <span className="calc-label">Einkaufspreis (Brutto)</span>
-              <span className="calc-value">{formatCurrency(calculations.einkaufspreisBrutto)}</span>
+            <div className="calculation-card">
+              {showProductSelection && (
+                <>
+                  <div className="calc-row">
+                    <span className="calc-label">Einkaufspreis (Brutto)</span>
+                    <span className="calc-value">{formatCurrency(calculations.einkaufspreisBrutto)}</span>
+                  </div>
+                  <div className="calc-row">
+                    <span className="calc-label-small">davon MwSt ({mwst}%)</span>
+                    <span className="calc-value-small">{formatCurrency(calculations.mwstBetrag)}</span>
+                  </div>
+                  <div className="divider"></div>
+                </>
+              )}
+              <div className="calc-row">
+                <span className="calc-label">Stundenlohn</span>
+                <span className="calc-value">{formatCurrency(stundenlohn)}</span>
+              </div>
+              {schneiden && (
+                <div className="calc-row">
+                  <span className="calc-label">Schnittpreis</span>
+                  <span className="calc-value">{formatCurrency(schnittpreis)}</span>
+                </div>
+              )}
+              <div className="calc-row">
+                <span className="calc-label">Aufwandsentschädigung</span>
+                <span className="calc-value">{formatCurrency(calculations.aufwandsentschaedigung)}</span>
+              </div>
             </div>
-            <div className="calc-row">
-              <span className="calc-label-small">davon MwSt ({mwst}%)</span>
-              <span className="calc-value-small">{formatCurrency(calculations.mwstBetrag)}</span>
-            </div>
-            <div className="divider"></div>
-            <div className="calc-row">
-              <span className="calc-label">Stundenlohn</span>
-              <span className="calc-value">{formatCurrency(stundenlohn)}</span>
-            </div>
-            <div className="calc-row">
-              <span className="calc-label">Schnittpreis</span>
-              <span className="calc-value">{formatCurrency(schnittpreis)}</span>
-            </div>
-            <div className="calc-row">
-              <span className="calc-label">Aufwandsentschädigung</span>
-              <span className="calc-value">{formatCurrency(calculations.aufwandsentschaedigung)}</span>
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         <div className="spacer"></div>
       </div>
 
       <div className="bottom-container">
         <div className="summary-container">
-          <div className="summary-row">
-            <span className="summary-label">Einkaufspreis (Brutto)</span>
-            <span className="summary-value">{formatCurrency(calculations.einkaufspreisBrutto)}</span>
-          </div>
+          {showProductSelection && (
+            <div className="summary-row">
+              <span className="summary-label">Einkaufspreis (Brutto)</span>
+              <span className="summary-value">{formatCurrency(calculations.einkaufspreisBrutto)}</span>
+            </div>
+          )}
           <div className="summary-row">
             <span className="summary-label">Aufwandsentschädigung</span>
             <span className="summary-value">{formatCurrency(calculations.aufwandsentschaedigung)}</span>
           </div>
+          {schneiden && (
+            <div className="summary-row">
+              <span className="summary-label">Schnittpreis</span>
+              <span className="summary-value">{formatCurrency(calculations.schnittpreisTotal)}</span>
+            </div>
+          )}
           <div className="total-row">
             <span className="total-label">Gesamtpreis</span>
             <span className="total-value">{formatCurrency(calculations.gesamtpreis)}</span>

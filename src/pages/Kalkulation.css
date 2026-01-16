@@ -145,7 +145,8 @@
   border-top: 1px solid #e2e8f0;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
   z-index: 999;
-  padding-bottom: calc(60px + max(8px, env(safe-area-inset-bottom)));
+  /* Space for tab bar below */
+  margin-bottom: calc(60px + max(8px, env(safe-area-inset-bottom)));
 }
 
 .summary-container {
@@ -197,7 +198,9 @@
   width: 100%;
   background: #f0fdfa;
   border: none;
-  padding: 10px;
+  border-top: 1px solid #e2e8f0;
+  padding: 12px;
+  min-height: 44px;
   font-size: 14px;
   font-weight: 500;
   color: #0891b2;

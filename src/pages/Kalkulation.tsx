@@ -25,8 +25,8 @@ export default function Kalkulation() {
   const [zeitaufwand, setZeitaufwand] = useState('');
   const [schneiden, setSchneiden] = useState(false);
 
-  // Determine if we should show product selection (only for "Einsetzen")
-  const showProductSelection = behandlung === 'Einsetzen';
+  // Determine if we should show product selection (for "Einsetzen" or when nothing selected)
+  const showProductSelection = !behandlung || behandlung === 'Einsetzen';
 
   const produktOptions = useMemo(
     () => getFilteredOptions('produkt', { behandlung: 'Einsetzen', ...selection }),
@@ -284,10 +284,6 @@ export default function Kalkulation() {
                   <div className="divider"></div>
                 </>
               )}
-              <div className="calc-row">
-                <span className="calc-label">Stundenlohn</span>
-                <span className="calc-value">{formatCurrency(stundenlohn)}</span>
-              </div>
               {schneiden && (
                 <div className="calc-row">
                   <span className="calc-label">Schnittpreis</span>
@@ -295,7 +291,9 @@ export default function Kalkulation() {
                 </div>
               )}
               <div className="calc-row">
-                <span className="calc-label">Aufwandsentschädigung</span>
+                <span className="calc-label">
+                  {zeitaufwand ? `Aufwandsentschädigung (für ${zeitaufwand} Stunden)` : 'Aufwandsentschädigung'}
+                </span>
                 <span className="calc-value">{formatCurrency(calculations.aufwandsentschaedigung)}</span>
               </div>
             </div>
@@ -314,7 +312,9 @@ export default function Kalkulation() {
             </div>
           )}
           <div className="summary-row">
-            <span className="summary-label">Aufwandsentschädigung</span>
+            <span className="summary-label">
+              {zeitaufwand ? `Aufwandsentschädigung (${zeitaufwand}h)` : 'Aufwandsentschädigung'}
+            </span>
             <span className="summary-value">{formatCurrency(calculations.aufwandsentschaedigung)}</span>
           </div>
           {schneiden && (

@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useProductStore, type Product } from '../stores/productStore';
+import ImportModal from '../components/ImportModal';
 import './Produkte.css';
 
 export default function Produkte() {
-  const { products, addProduct, updateProduct, deleteProduct, getUniqueValues } =
+  const { products, addProduct, updateProduct, deleteProduct, getUniqueValues, importProducts } =
     useProductStore();
 
   const [filters, setFilters] = useState({
@@ -15,6 +16,7 @@ export default function Produkte() {
   });
 
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [importModalVisible, setImportModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const filteredProducts = useMemo(() => {
@@ -56,6 +58,15 @@ export default function Produkte() {
     setEditModalVisible(false);
   };
 
+  const handleImport = (products: Omit<Product, 'id'>[]) => {
+    const newProducts: Product[] = products.map((p) => ({
+      ...p,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    }));
+    importProducts(newProducts);
+    setImportModalVisible(false);
+  };
+
   const formatCurrency = (value: number) => {
     return value.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
   };
@@ -65,6 +76,9 @@ export default function Produkte() {
   return (
     <div className="produkte-page">
       <div className="header-actions">
+        <button className="action-button" onClick={() => setImportModalVisible(true)}>
+          📋 Import
+        </button>
         <button className="action-button primary" onClick={handleAddNew}>
           + Neu
         </button>
@@ -149,6 +163,14 @@ export default function Produkte() {
           existingBehandlungen={existingBehandlungen}
           onSave={handleSaveProduct}
           onClose={() => setEditModalVisible(false)}
+        />
+      )}
+
+      {importModalVisible && (
+        <ImportModal
+          existingBehandlungen={existingBehandlungen}
+          onImport={handleImport}
+          onClose={() => setImportModalVisible(false)}
         />
       )}
     </div>

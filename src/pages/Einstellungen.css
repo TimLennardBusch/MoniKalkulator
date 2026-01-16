@@ -1,0 +1,178 @@
+.einstellungen-page {
+  height: 100%;
+  background: #f8fafc;
+  overflow-y: auto;
+  padding: 20px;
+  padding-bottom: 100px;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 16px 0;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-with-suffix {
+  display: flex;
+}
+
+.input-with-suffix .input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.suffix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 0 12px 12px 0;
+  padding: 0 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.input {
+  flex: 1;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 14px 16px;
+  font-size: 16px;
+  color: #0f172a;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #0891b2;
+}
+
+.input::placeholder {
+  color: #94a3b8;
+}
+
+.formula-input {
+  font-family: 'Menlo', 'Monaco', monospace;
+  font-size: 15px;
+}
+
+.formula-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 6px 0 0;
+  font-style: italic;
+}
+
+.info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #f0fdfa;
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.info-icon {
+  font-size: 18px;
+}
+
+.info-box p {
+  flex: 1;
+  font-size: 14px;
+  color: #0891b2;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.variables-box {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.variables-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 12px 0;
+}
+
+.variables-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.variable-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.variable-name {
+  font-family: 'Menlo', 'Monaco', monospace;
+  font-size: 13px;
+  color: #0891b2;
+  background: #f0fdfa;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.variable-desc {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.save-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+  color: #ffffff;
+  border: none;
+  padding: 16px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.save-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(8, 145, 178, 0.4);
+}
+
+.save-button:active {
+  transform: translateY(0);
+}

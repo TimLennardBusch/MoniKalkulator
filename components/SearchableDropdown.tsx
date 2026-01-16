@@ -36,19 +36,25 @@ export default function SearchableDropdown({
     const [searchText, setSearchText] = useState('');
 
     const filteredAvailable = useMemo(() => {
-        if (!searchText.trim()) return availableOptions;
-        const search = searchText.toLowerCase();
-        return availableOptions.filter((opt) =>
-            opt.toLowerCase().includes(search)
-        );
+        let options = availableOptions;
+        if (searchText.trim()) {
+            const search = searchText.toLowerCase();
+            options = availableOptions.filter((opt) =>
+                opt.toLowerCase().includes(search)
+            );
+        }
+        return options.slice().sort((a, b) => a.localeCompare(b, 'de'));
     }, [availableOptions, searchText]);
 
     const filteredUnavailable = useMemo(() => {
-        if (!searchText.trim()) return unavailableOptions;
-        const search = searchText.toLowerCase();
-        return unavailableOptions.filter((opt) =>
-            opt.toLowerCase().includes(search)
-        );
+        let options = unavailableOptions;
+        if (searchText.trim()) {
+            const search = searchText.toLowerCase();
+            options = unavailableOptions.filter((opt) =>
+                opt.toLowerCase().includes(search)
+            );
+        }
+        return options.slice().sort((a, b) => a.localeCompare(b, 'de'));
     }, [unavailableOptions, searchText]);
 
     const handleSelect = (option: string) => {
@@ -119,7 +125,6 @@ export default function SearchableDropdown({
                             placeholderTextColor="#94a3b8"
                             value={searchText}
                             onChangeText={setSearchText}
-                            autoFocus
                         />
                         {searchText.length > 0 && (
                             <TouchableOpacity onPress={() => setSearchText('')}>

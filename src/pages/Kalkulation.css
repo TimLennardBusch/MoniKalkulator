@@ -9,7 +9,7 @@
   flex: 1;
   overflow-y: auto;
   padding: 20px;
-  padding-bottom: 180px;
+  padding-bottom: 280px;
 }
 
 .section {
@@ -156,7 +156,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  height: 36px;
+  line-height: 36px;
 }
 
 .summary-label {
@@ -173,8 +174,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
+  height: 44px;
+  line-height: 44px;
   border-top: 1px solid #e2e8f0;
+  padding: 0 20px;
 }
 
 .total-label {
@@ -195,10 +198,10 @@
   justify-content: center;
   gap: 6px;
   width: 100%;
+  height: 44px;
   background: #f0fdfa;
   border: none;
   border-top: 1px solid #e2e8f0;
-  padding: 12px 0;
   font-size: 14px;
   font-weight: 500;
   color: #0891b2;

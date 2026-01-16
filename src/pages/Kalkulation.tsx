@@ -323,10 +323,10 @@ export default function Kalkulation() {
               <span className="summary-value">{formatCurrency(calculations.schnittpreisTotal)}</span>
             </div>
           )}
-          <div className="total-row">
-            <span className="total-label">Gesamtpreis</span>
-            <span className="total-value">{formatCurrency(calculations.gesamtpreis)}</span>
-          </div>
+        </div>
+        <div className="total-row">
+          <span className="total-label">Gesamtpreis</span>
+          <span className="total-value">{formatCurrency(calculations.gesamtpreis)}</span>
         </div>
         {hasSelection && (
           <button className="reset-button" onClick={handleReset}>
